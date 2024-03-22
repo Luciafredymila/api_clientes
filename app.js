@@ -11,6 +11,26 @@ const { auth } = require("express-oauth2-jwt-bearer");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+const jwt = require('express-jwt');
+const jwksRsa = require('jwks-rsa');
+
+// Definir el esquema de seguridad
+const securityOptions = {
+  algorithms: ['RS256'], // Algoritmo de firma del token
+  audience: 'http://localhost:3000/api/productos', // Audiencia del token (normalmente la URL de tu API)
+  issuer: 'https://dev-utn-frc-iaew.auth0.com/', // Emisor del token
+};
+
+// Validar el token JWT utilizando express-jwt y jwks-rsa
+app.use(jwt({
+  secret: jwksRsa.expressJwtSecret({
+    cache: true,
+    rateLimit: true,
+    jwksRequestsPerMinute: 5,
+    jwksUri: 'https://dev-utn-frc-iaew.auth0.com/.well-known/jwks.json'
+  }),
+  ...securityOptions
+}).unless({ path: ['/public', '/login'] })); // Especifica rutas que no requieren un token de autorización
 
 // Configuracion Middleware con el Servidor de Autorización
 const autenticacion = auth({
